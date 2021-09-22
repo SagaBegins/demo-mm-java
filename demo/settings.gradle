@@ -1,0 +1,38 @@
+rootProject.name = 'demo'
+
+include ':demo1'
+include ':demo2'
+
+// Project must be in directory ${rootProject.projectDir}/demo1/demo11
+// include ':demo1:demo11'
+
+// setting.gradle is executed every single time gradlew is run
+// if you want to added using the path use appendSubProjectToGradle.sh
+// Adding projects using a recursive function
+def addNestedProjects(String path) {
+	file(path).eachDir { dir ->
+		File gradleFile = null
+		if(System.properties['os.name'].toLowerCase().contains('windows')){
+			gradleFile = new File(dir.path+"\\build.gradle")
+		} else {
+			gradleFile = new File(dir.path+"/build.gradle")
+		}
+
+		// Checking if build.gradle exists and including into the project
+		if (gradleFile.exists()){
+			// Includes projects with directory path replaced with :
+			include dir.path.replace(rootProject.projectDir.path, "").replace("\\",":").replace("/",":")
+
+			// Add to specific project hierarchy and setting its directory
+			// include dir.name
+			// project(":${dir.name}").projectDir = dir
+			// println("Project: ${dir}")
+		}
+
+		// Surround with try catch if multiple projects have same name when including using dir.name
+		addNestedProjects(dir.path)
+	}
+}
+
+addNestedProjects('demo1')
+addNestedProjects('demo2')
